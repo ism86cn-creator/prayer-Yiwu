@@ -2,405 +2,209 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="مواقيت الصلاة">
-<meta name="theme-color" content="#080d1a">
-<title>مواقيت الصلاة — يوو</title>
-
-<!-- PWA Icon as inline SVG data URI -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23080d1a'/%3E%3Ccircle cx='90' cy='72' r='38' fill='none' stroke='%23c9a84c' stroke-width='3'/%3E%3Cpath d='M90 40 Q106 56 106 72 Q106 88 90 104 Q74 88 74 72 Q74 56 90 40Z' fill='%23c9a84c' opacity='0.7'/%3E%3Crect x='84' y='102' width='12' height='28' fill='%23c9a84c'/%3E%3Crect x='70' y='128' width='40' height='6' rx='3' fill='%23c9a84c'/%3E%3C/svg%3E">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
-
+<title>مواقيت الصلاة - ييوو</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <style>
+:root{--bg:#020814;--gold:#f0c040;--white:#f7fbff;--muted:#8ab4d0;--green:#00e676}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --gold:#c9a84c;--gold2:#e8c97a;--gold3:#f5e0a0;
-  --green2:#22a845;--green3:#4ddb74;
-  --txt:#eee8d8;--txt2:#a8b8c8;--txt3:#6a7a8a;
-  --bg:#080d1a;--bg2:rgba(255,255,255,0.05);--bg3:rgba(255,255,255,0.04);
-  --neon-gold:0 0 8px rgba(201,168,76,0.9),0 0 22px rgba(201,168,76,0.4);
-  --neon-green:0 0 8px rgba(77,219,116,0.9),0 0 22px rgba(77,219,116,0.4);
-  --border:rgba(201,168,76,0.2);
-  --safe-top: env(safe-area-inset-top);
-  --safe-bottom: env(safe-area-inset-bottom);
-}
-
-html,body{
-  width:100%;height:100%;
-  background:var(--bg);
-  overflow:hidden;
-  font-family:'Cairo',sans-serif;
-  color:var(--txt);
-  direction:rtl;
-}
-
-/* ─── CANVAS ─── */
-#stars{position:fixed;inset:0;width:100%;height:100%;z-index:0}
-
-/* ─── LAYOUT ─── */
-.app{
-  position:relative;z-index:1;
-  width:100%;height:100%;
-  padding: calc(var(--safe-top) + 8px) 8px calc(var(--safe-bottom) + 8px);
-  display:flex;flex-direction:column;gap:7px;
-}
-
-/* ─── GLASS CARD ─── */
-.card{
-  background:rgba(14,21,37,0.65);
-  border:1px solid var(--border);
-  border-radius:16px;
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  overflow:hidden;position:relative;
-  transition:transform 0.25s ease,box-shadow 0.25s ease;
-}
-.card:active{transform:scale(0.98)}
-.card::before{
-  content:'';position:absolute;inset:0;border-radius:16px;
-  background:linear-gradient(135deg,rgba(201,168,76,0.07) 0%,transparent 55%);
-  pointer-events:none;
-}
-.card.green{background:rgba(8,30,16,0.7);border-color:rgba(34,168,69,0.35)}
-.card.green::before{background:linear-gradient(135deg,rgba(77,219,116,0.07) 0%,transparent 55%)}
-
-/* ─── TOP ROW: DATE + CLOCK ─── */
-.top-row{display:flex;gap:7px;flex-shrink:0}
-.date-card{flex:1;padding:10px 14px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:2px}
-.day-big{font-family:'Amiri',serif;font-size:clamp(22px,6vw,36px);font-weight:700;color:var(--gold2);line-height:1;text-shadow:0 0 18px rgba(201,168,76,0.5)}
-.day-en{font-size:clamp(10px,2.5vw,13px);color:var(--txt3);letter-spacing:1px}
-.divider{width:70%;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);margin:3px auto}
-.hijri{font-family:'Amiri',serif;font-size:clamp(12px,3vw,16px);color:var(--gold3);text-align:center}
-.greg{font-size:clamp(11px,2.8vw,14px);color:var(--txt2);font-weight:600;text-align:center}
-
-.clock-card{padding:10px 14px;display:flex;flex-direction:column;justify-content:center;align-items:center}
-.clock-display{display:flex;align-items:baseline;gap:6px}
-.clock-num{
-  font-size:clamp(38px,10vw,60px);font-weight:900;color:#fff;line-height:1;letter-spacing:-2px;
-  text-shadow:0 0 12px rgba(255,255,255,0.5),0 0 30px rgba(201,168,76,0.5);
-  animation:glow-clock 3s ease-in-out infinite alternate;
-}
-@keyframes glow-clock{
-  from{text-shadow:0 0 10px rgba(255,255,255,0.4),0 0 25px rgba(201,168,76,0.4)}
-  to{text-shadow:0 0 18px rgba(255,255,255,0.7),0 0 45px rgba(201,168,76,0.7),0 0 70px rgba(201,168,76,0.2)}
-}
-.ampm{font-size:clamp(14px,3.5vw,20px);color:var(--gold2);font-weight:700;text-shadow:var(--neon-gold)}
-
-/* ─── NEXT PRAYER ─── */
-.next-card{flex-shrink:0;padding:10px 16px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.next-lbl{font-size:10px;color:var(--green2);letter-spacing:2px;font-weight:600;text-shadow:var(--neon-green)}
-.next-name-ar{font-family:'Amiri',serif;font-size:clamp(18px,5vw,26px);color:#fff;font-weight:700;line-height:1}
-.next-name-en{font-size:10px;color:var(--green2);letter-spacing:2px}
-.countdown{
-  font-size:clamp(28px,8vw,42px);font-weight:700;color:var(--green3);
-  font-family:monospace;letter-spacing:3px;
-  text-shadow:var(--neon-green);
-  animation:cd-glow 1s ease-in-out infinite alternate;
-}
-@keyframes cd-glow{
-  from{text-shadow:0 0 6px rgba(77,219,116,0.6),0 0 15px rgba(77,219,116,0.3)}
-  to{text-shadow:0 0 14px rgba(77,219,116,1),0 0 30px rgba(77,219,116,0.6),0 0 50px rgba(77,219,116,0.2)}
-}
-.cd-labels{display:flex;gap:28px;font-size:9px;color:var(--green2)}
-.pbar-track{width:100%;height:5px;background:rgba(255,255,255,0.08);border-radius:3px;margin-top:4px;overflow:hidden;position:relative}
-.pbar-fill{height:100%;background:linear-gradient(90deg,#0d4a1c,#22a845,#4ddb74);border-radius:3px;transition:width 1s linear;position:relative}
-.pbar-fill::after{content:'';position:absolute;left:-1px;top:-4px;width:13px;height:13px;border-radius:50%;background:#4ddb74;box-shadow:0 0 8px rgba(77,219,116,1);transform:translateX(-50%);transition:left 1s linear}
-
-/* ─── PRAYER LIST ─── */
-.prayers-col{flex:1;display:flex;flex-direction:column;gap:4px;min-height:0;overflow:hidden}
-.p-row{
-  flex:1;display:flex;align-items:center;justify-content:space-between;
-  padding:0 12px;border-radius:10px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(255,255,255,0.07);
-  transition:all 0.35s ease;
-  min-height:0;overflow:hidden;
-}
-.p-row.active{background:rgba(34,168,69,0.1);border-color:rgba(34,168,69,0.45);box-shadow:0 0 12px rgba(34,168,69,0.15)}
-.p-row.passed{opacity:0.32}
-.p-row:active{transform:scale(0.99)}
-.p-left{display:flex;flex-direction:column;gap:0px;flex-shrink:0}
-.p-name-row{display:flex;align-items:center;gap:5px}
-.p-ar{font-family:'Amiri',serif;font-size:clamp(15px,4.2vw,22px);color:var(--txt);font-weight:700;line-height:1.1}
-.p-en{font-size:clamp(8px,1.8vw,10px);color:var(--txt3);letter-spacing:1px}
-.p-badge{display:none;font-size:9px;background:rgba(34,168,69,0.2);color:var(--green3);border:1px solid rgba(34,168,69,0.4);padding:1px 7px;border-radius:8px;animation:badge-pulse 2s infinite;white-space:nowrap}
-@keyframes badge-pulse{0%,100%{opacity:1;box-shadow:0 0 5px rgba(77,219,116,0.4)}50%{box-shadow:0 0 12px rgba(77,219,116,0.8)}}
-.p-time{font-size:clamp(18px,5.5vw,28px);font-weight:700;color:var(--gold2);direction:ltr;line-height:1;transition:all 0.4s;flex-shrink:0}
-.p-time.active-t{color:var(--green3);font-size:clamp(20px,6vw,30px);text-shadow:var(--neon-green)}
-
-/* ─── BOTTOM ADHKAR BAR ─── */
-.adhkar-bar{
-  flex-shrink:0;padding:0 16px;
-  display:flex;align-items:center;justify-content:center;gap:12px;
-  min-height:52px;
-}
-.tasbih{font-size:20px;animation:spin-tasbih 10s linear infinite}
-@keyframes spin-tasbih{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-.adhkar-text{font-family:'Amiri',serif;font-size:clamp(14px,4vw,20px);color:var(--txt);text-align:center;flex:1;line-height:1.5}
-
-/* ─── WEATHER STRIP ─── */
-.weather-strip{flex-shrink:0;padding:8px 14px;display:flex;align-items:center;justify-content:space-between}
-.w-temp-big{font-size:clamp(26px,7vw,38px);font-weight:700;color:#fff;line-height:1;text-shadow:0 0 20px rgba(255,255,255,0.25)}
-.w-icon-anim{font-size:clamp(28px,7vw,38px);animation:float-w 4s ease-in-out infinite}
-@keyframes float-w{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-.w-stats{display:flex;gap:6px;align-items:center}
-.w-stat{background:rgba(255,255,255,0.06);border-radius:8px;padding:4px 8px;text-align:center}
-.w-sv{font-size:clamp(11px,2.8vw,14px);font-weight:600;color:var(--txt)}
-.w-sl{font-size:9px;color:var(--txt3)}
-.w-desc{font-size:clamp(10px,2.5vw,13px);color:#a8c8dd;margin-top:2px}
-.w-feels{font-size:10px;color:var(--txt3);margin-top:1px}
-
-/* ─── ANIMATIONS ─── */
-@keyframes fade-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.card{animation:fade-in 0.6s ease both}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--white);font-family:'Tajawal',Arial,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(ellipse at 50% 0%,rgba(20,60,120,0.5) 0%,transparent 60%),linear-gradient(180deg,#020814 0%,#07152b 50%,#020814 100%)}
+.header{text-align:center;padding:24px 20px 12px}
+.city-name{font-size:13px;color:var(--muted);margin-bottom:6px;letter-spacing:2px}
+.city-name::before{content:"📍 "}
+.greg-date{font-size:15px;color:var(--white);font-weight:700;margin-bottom:4px;letter-spacing:1px}
+.hijri-date{font-family:'Amiri';font-size:20px;color:var(--gold);font-weight:700;margin-bottom:8px}
+.day-name{font-size:32px;font-weight:900;margin-bottom:2px}
+.day-name-en{font-size:14px;color:var(--muted);letter-spacing:3px;text-transform:uppercase}
+.clock-section{text-align:center;padding:8px 20px 24px}
+.clock-time{font-size:80px;font-weight:900;line-height:1;letter-spacing:-3px;text-shadow:0 0 30px rgba(240,192,64,0.3);font-variant-numeric:tabular-nums}
+.clock-ampm{font-size:22px;color:var(--gold);font-weight:900;vertical-align:super;margin-right:6px}
+.next-prayer-card{background:linear-gradient(135deg,rgba(0,100,50,0.3),rgba(0,60,30,0.4));border:1px solid rgba(0,230,118,0.3);border-radius:24px;margin:0 20px 20px;padding:20px;position:relative;overflow:hidden;box-shadow:0 0 25px rgba(0,230,118,0.1)}
+.next-prayer-card::before{content:"";position:absolute;top:-50%;right:-50%;width:200%;height:200%;background:radial-gradient(circle,rgba(0,230,118,0.08) 0%,transparent 60%);animation:pulse 4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:0.8}}
+.next-label{font-size:13px;color:var(--green);font-weight:900;margin-bottom:10px;letter-spacing:2px;text-transform:uppercase}
+.next-label::before{content:"🔔 "}
+.next-name{font-family:'Amiri';font-size:40px;font-weight:700;margin-bottom:6px;position:relative;z-index:1}
+.next-time{font-size:16px;color:var(--gold);font-weight:900;margin-bottom:16px;position:relative;z-index:1;letter-spacing:1px}
+.countdown{font-size:42px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums;position:relative;z-index:1;text-shadow:0 0 15px rgba(0,230,118,0.3);letter-spacing:2px}
+.countdown-labels{display:flex;justify-content:center;gap:28px;font-size:11px;color:rgba(200,255,220,0.6);margin-top:6px;position:relative;z-index:1;font-weight:700}
+.progress-bar{height:5px;background:rgba(0,0,0,0.3);border-radius:10px;margin-top:14px;overflow:hidden;position:relative;z-index:1}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#76ff03);border-radius:10px;transition:width 1s ease;box-shadow:0 0 8px rgba(0,230,118,0.4)}
+.prayer-list{padding:0 20px}
+.section-title{font-size:13px;color:var(--gold);font-weight:900;margin-bottom:12px;letter-spacing:2px;padding:0 4px}
+.prayer-item{display:grid;grid-template-columns:48px 1fr 90px;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.06);position:relative}
+.prayer-item:last-child{border-bottom:none}
+.prayer-item.active{background:linear-gradient(90deg,transparent,rgba(0,230,118,0.06),transparent);margin:0 -20px;padding:14px 20px;border-radius:16px;border-bottom:none;margin-bottom:4px}
+.prayer-icon{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;background:radial-gradient(circle,rgba(20,60,120,0.5),rgba(5,20,45,0.6));border:1px solid rgba(255,255,255,0.08)}
+.prayer-item.active .prayer-icon{background:radial-gradient(circle,rgba(0,100,50,0.5),rgba(0,60,30,0.6));border-color:rgba(0,230,118,0.3);box-shadow:0 0 12px rgba(0,230,118,0.2)}
+.prayer-info{text-align:right}
+.prayer-name-ar{font-family:'Amiri';font-size:26px;font-weight:700;line-height:1.2}
+.prayer-name-en{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+.prayer-time{direction:ltr;text-align:left;font-size:26px;font-weight:900;font-variant-numeric:tabular-nums}
+.prayer-time small{font-size:13px;color:var(--gold);margin-left:4px;font-weight:700}
+.active-badge{position:absolute;left:0;top:50%;transform:translateY(-50%);background:linear-gradient(90deg,var(--green),#76ff03);color:#000;font-size:9px;font-weight:900;padding:3px 10px;border-radius:0 10px 10px 0;letter-spacing:1px}
+.sun-section{padding:16px 20px 8px}
+.sun-times{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sun-box{background:rgba(6,28,58,0.4);border:1px solid rgba(240,192,64,0.15);border-radius:16px;padding:14px;text-align:center}
+.sun-icon{font-size:28px;margin-bottom:4px;display:block}
+.sun-label{font-size:11px;color:var(--gold);font-weight:900;letter-spacing:1px;margin-bottom:4px}
+.sun-time{font-size:20px;font-weight:900;direction:ltr}
+.azkar-section{margin:20px;padding:24px 20px;background:linear-gradient(135deg,rgba(15,40,80,0.3),rgba(5,20,45,0.4));border:1px solid rgba(240,192,64,0.15);border-radius:20px;text-align:center;position:relative;overflow:hidden}
+.azkar-icon{font-size:36px;margin-bottom:12px;display:block;opacity:0.9}
+.azkar-text{font-family:'Amiri';font-size:22px;font-weight:700;line-height:1.7;margin-bottom:10px;position:relative;z-index:1}
+.azkar-translation{font-size:13px;color:var(--gold);line-height:1.6;position:relative;z-index:1;opacity:0.9}
+.azkar-label{font-size:11px;color:var(--muted);margin-top:14px;letter-spacing:3px;text-transform:uppercase;position:relative;z-index:1}
+.footer{text-align:center;padding:20px 16px 30px;font-size:12px;color:var(--muted);border-top:1px solid rgba(255,255,255,0.06)}
+.qibla{font-size:15px;font-weight:900;color:var(--white);margin-bottom:6px;letter-spacing:1px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+.animate-in{animation:fadeIn 0.5s ease forwards;opacity:0}
+.delay-1{animation-delay:0.1s}
+.delay-2{animation-delay:0.2s}
+.delay-3{animation-delay:0.3s}
+.delay-4{animation-delay:0.4s}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(240,192,64,0.2);border-radius:4px}
+.prayer-item.past{opacity:0.4}
+.prayer-item.past .prayer-name-ar{color:var(--muted)}
 </style>
 </head>
 <body>
 
-<canvas id="stars"></canvas>
+<div class="header animate-in">
+  <div class="city-name">Yiwu, China</div>
+  <div class="greg-date" id="GREG">—</div>
+  <div class="hijri-date" id="HIJRI">—</div>
+  <div class="day-name" id="DAYNAME">—</div>
+  <div class="day-name-en" id="DAYNAMEEN">—</div>
+</div>
 
-<div class="app" id="app">
+<div class="clock-section animate-in delay-1">
+  <span class="clock-time" id="CLOCK">00:00</span>
+  <span class="clock-ampm" id="AMPM">م</span>
+</div>
 
-  <!-- WEATHER STRIP -->
-  <div class="card weather-strip" style="animation-delay:0.05s">
-    <div>
-      <div class="w-temp-big">31°C</div>
-      <div class="w-desc">غائم جزئياً — يوو</div>
-      <div class="w-feels">يشعر كـ 33° · رطوبة 39%</div>
-    </div>
-    <div class="w-stats">
-      <div class="w-stat"><div class="w-sl">🌅 شروق</div><div class="w-sv">05:00</div></div>
-      <div class="w-stat"><div class="w-sl">🌇 غروب</div><div class="w-sv">19:04</div></div>
-    </div>
-    <div class="w-icon-anim">⛅</div>
-  </div>
+<div class="next-prayer-card animate-in delay-2">
+  <div class="next-label">الصلاة القادمة</div>
+  <div class="next-name" id="NEXTNAME">—</div>
+  <div class="next-time" id="NEXTTIME">—</div>
+  <div class="countdown" id="COUNTDOWN">00:00:00</div>
+  <div class="countdown-labels"><span>ساعة</span><span>دقيقة</span><span>ثانية</span></div>
+  <div class="progress-bar"><div class="progress-fill" id="PROGRESS" style="width:0%"></div></div>
+</div>
 
-  <!-- DATE + CLOCK -->
-  <div class="top-row">
-    <div class="card date-card" style="animation-delay:0.1s">
-      <div class="day-big" id="day-ar">الخميس</div>
-      <div class="day-en" id="day-en">Thursday</div>
-      <div class="divider"></div>
-      <div class="hijri">٢٦ ذو الحجة ١٤٤٧ هـ</div>
-      <div class="greg" id="greg">11 June 2026</div>
+<div class="sun-section animate-in delay-3">
+  <div class="sun-times">
+    <div class="sun-box">
+      <span class="sun-icon">🌅</span>
+      <div class="sun-label">الشروق</div>
+      <div class="sun-time" id="SUNRISE">--:--</div>
     </div>
-    <div class="card clock-card" style="animation-delay:0.15s">
-      <div class="clock-display">
-        <div class="clock-num" id="clock">01:37</div>
-        <div class="ampm" id="ampm">PM</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- NEXT PRAYER COUNTDOWN -->
-  <div class="card green next-card" style="animation-delay:0.2s">
-    <div class="next-lbl">◈ الصلاة القادمة ◈</div>
-    <div class="next-name-ar" id="np-ar">العصر</div>
-    <div class="next-name-en" id="np-en">ASR</div>
-    <div class="countdown" id="countdown">03:17:04</div>
-    <div class="cd-labels"><span>ساعة</span><span>دقيقة</span><span>ثانية</span></div>
-    <div class="pbar-track" style="width:100%">
-      <div class="pbar-fill" id="pbar" style="width:60%"></div>
+    <div class="sun-box">
+      <span class="sun-icon">🌇</span>
+      <div class="sun-label">الغروب</div>
+      <div class="sun-time" id="SUNSET">--:--</div>
     </div>
   </div>
+</div>
 
-  <!-- PRAYER TIMES -->
-  <div class="card prayers-col" style="padding:10px;animation-delay:0.25s">
-    <div class="p-row" id="p-fajr">
-      <div class="p-left"><div class="p-name-row"><div class="p-ar">الفجر</div><div class="p-badge" id="nb-fajr">◈</div></div><div class="p-en">FAJR</div></div>
-      <div class="p-time" id="t-fajr">04:15 <span style="font-size:0.5em;color:var(--txt3)">AM</span></div>
-    </div>
-    <div class="p-row" id="p-dhuhr">
-      <div class="p-left"><div class="p-name-row"><div class="p-ar">الظهر</div><div class="p-badge" id="nb-dhuhr">◈</div></div><div class="p-en">DHUHR</div></div>
-      <div class="p-time" id="t-dhuhr">12:59 <span style="font-size:0.5em;color:var(--txt3)">PM</span></div>
-    </div>
-    <div class="p-row" id="p-asr">
-      <div class="p-left"><div class="p-name-row"><div class="p-ar">العصر</div><div class="p-badge" id="nb-asr">◈</div></div><div class="p-en">ASR</div></div>
-      <div class="p-time" id="t-asr">04:55 <span style="font-size:0.5em;color:var(--txt3)">PM</span></div>
-    </div>
-    <div class="p-row" id="p-maghrib">
-      <div class="p-left"><div class="p-name-row"><div class="p-ar">المغرب</div><div class="p-badge" id="nb-maghrib">◈</div></div><div class="p-en">MAGHRIB</div></div>
-      <div class="p-time" id="t-maghrib">07:04 <span style="font-size:0.5em;color:var(--txt3)">PM</span></div>
-    </div>
-    <div class="p-row" id="p-isha">
-      <div class="p-left"><div class="p-name-row"><div class="p-ar">العشاء</div><div class="p-badge" id="nb-isha">◈</div></div><div class="p-en">ISHA</div></div>
-      <div class="p-time" id="t-isha">08:25 <span style="font-size:0.5em;color:var(--txt3)">PM</span></div>
-    </div>
-  </div>
+<div class="prayer-list animate-in delay-3">
+  <div class="section-title">الصلوات الخمس</div>
+  <div id="PRAYERLIST"></div>
+</div>
 
-  <!-- ADHKAR BAR -->
-  <div class="card adhkar-bar" style="animation-delay:0.3s">
-    <div class="tasbih">📿</div>
-    <div class="adhkar-text" id="adhkar">سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، سُبْحَانَ اللّٰهِ الْعَظِيم</div>
-    <div class="tasbih" style="animation-direction:reverse">📿</div>
-  </div>
+<div class="azkar-section animate-in delay-4">
+  <span class="azkar-icon">📖</span>
+  <div class="azkar-text" id="AZKAR">اللهم أعنا على ذكرك وشكرك وحسن عبادتك</div>
+  <div class="azkar-translation" id="AZKARTRANS">O Allah, help us to remember You, thank You, and worship You in the best way</div>
+  <div class="azkar-label">أذكار اليوم</div>
+</div>
 
+<div class="footer">
+  <div class="qibla">🕋 اتجاه القبلة: 249°</div>
+  <div>تم التحديث: <span id="UPDATED">--:--</span></div>
 </div>
 
 <script>
-// ─── DATA ───
-const PRAYERS=[
-  {id:'fajr', ar:'الفجر',  en:'FAJR',    h:4,  m:15},
-  {id:'dhuhr',ar:'الظهر',  en:'DHUHR',   h:12, m:59},
-  {id:'asr',  ar:'العصر',  en:'ASR',     h:16, m:55},
-  {id:'maghrib',ar:'المغرب',en:'MAGHRIB', h:19, m:4},
-  {id:'isha', ar:'العشاء', en:'ISHA',    h:20, m:25}
-];
-const ADHKAR=[
-  'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ، سُبْحَانَ اللّٰهِ الْعَظِيم',
-  'لَا إِلَٰهَ إِلَّا اللّٰهُ وَحْدَهُ لَا شَرِيكَ لَه، لَهُ الْمُلْكُ وَلَهُ الْحَمْد',
-  'اللّٰهُمَّ صَلِّ وَسَلِّمْ عَلَىٰ سَيِّدِنَا مُحَمَّد',
-  'أَسْتَغْفِرُ اللّٰهَ الْعَظِيمَ وَأَتُوبُ إِلَيْه',
-  'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰه الْعَلِيِّ الْعَظِيم',
-  'حَسْبِيَ اللّٰهُ وَنِعْمَ الْوَكِيل، نِعْمَ الْمَوْلَىٰ وَنِعْمَ النَّصِير',
-  'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّار'
-];
-const DAYS_AR=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
-const DAYS_EN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+var D={1:[["06:05","06:54","13:00","15:35","17:18","18:40"],["06:05","06:54","13:00","15:35","17:18","18:40"],["06:05","06:54","13:00","15:35","17:19","18:40"],["06:10","06:55","13:00","15:35","17:20","18:40"],["06:10","06:55","13:00","15:35","17:20","18:40"],["06:10","06:55","13:00","15:35","17:21","18:45"],["06:10","06:55","13:00","15:35","17:22","18:45"],["06:10","06:55","13:00","15:35","17:23","18:45"],["06:10","06:55","13:00","15:35","17:24","18:45"],["06:10","06:55","13:00","15:35","17:24","18:45"],["06:10","06:55","13:00","15:35","17:25","18:45"],["06:10","06:55","13:00","15:40","17:26","18:50"],["06:10","06:55","13:00","15:40","17:27","18:50"],["06:10","06:55","13:00","15:40","17:28","18:50"],["06:10","06:55","13:00","15:40","17:29","18:50"],["06:10","06:55","13:00","15:40","17:29","18:50"],["06:10","06:55","13:00","15:40","17:30","18:50"],["06:10","06:55","13:00","15:40","17:31","18:55"],["06:05","06:54","13:00","15:40","17:32","18:55"],["06:05","06:54","13:00","15:40","17:33","18:55"],["06:05","06:54","13:00","15:40","17:34","18:55"],["06:05","06:53","13:00","15:40","17:34","18:55"],["06:05","06:53","13:00","15:40","17:35","18:55"],["06:05","06:53","13:00","15:45","17:36","19:00"],["06:05","06:52","13:00","15:45","17:37","19:00"],["06:05","06:52","13:00","15:45","17:38","19:00"],["06:05","06:52","13:00","15:45","17:39","19:00"],["06:05","06:51","13:00","15:45","17:40","19:00"],["06:05","06:51","13:00","15:45","17:40","19:00"],["06:05","06:50","13:00","15:45","17:41","19:05"],["06:05","06:50","13:00","15:45","17:42","19:05"]],6:[["04:15","05:01","13:00","16:55","18:59","20:20"],["04:15","05:01","13:00","16:55","19:00","20:20"],["04:15","05:00","13:00","16:55","19:00","20:20"],["04:15","05:00","13:00","16:55","19:01","20:20"],["04:15","05:00","13:00","16:55","19:01","20:20"],["04:15","05:00","13:00","16:55","19:02","20:20"],["04:15","05:00","13:00","16:55","19:02","20:20"],["04:15","05:00","13:00","16:55","19:03","20:25"],["04:15","05:00","13:00","16:55","19:03","20:25"],["04:15","05:00","13:00","16:55","19:04","20:25"],["04:15","05:00","13:00","16:55","19:04","20:25"],["04:15","05:00","13:00","16:55","19:04","20:25"],["04:15","05:00","13:00","17:00","19:05","20:25"],["04:15","05:00","13:00","17:00","19:05","20:25"],["04:15","05:00","13:00","17:00","19:06","20:25"],["04:15","05:00","13:00","17:00","19:06","20:25"],["04:15","05:00","13:00","17:00","19:06","20:25"],["04:15","05:00","13:00","17:00","19:06","20:25"],["04:15","05:00","13:00","17:00","19:07","20:30"],["04:15","05:01","13:00","17:00","19:07","20:30"],["04:15","05:01","13:00","17:00","19:07","20:30"],["04:15","05:01","13:00","17:00","19:07","20:30"],["04:15","05:01","13:00","17:00","19:07","20:30"],["04:15","05:01","13:00","17:00","19:08","20:30"],["04:15","05:02","13:00","17:00","19:08","20:30"],["04:15","05:02","13:00","17:00","19:08","20:30"],["04:15","05:02","13:00","17:00","19:08","20:30"],["04:15","05:03","13:00","17:00","19:08","20:30"],["04:15","05:03","13:00","17:00","19:08","20:30"],["04:15","05:03","13:00","17:00","19:08","20:30"]]};
+for(let m=2;m<=5;m++){D[m]=D[1].map((day,i)=>day.map((t,j)=>{let h=parseInt(t.split(':')[0]),mn=parseInt(t.split(':')[1]);let adj=(m-1)*0.3;if(j===0)h=Math.max(4,h-Math.floor(adj*2));if(j===1)h=Math.max(5,h-Math.floor(adj*1.5));if(j===3)h=Math.min(17,h+Math.floor(adj));if(j===4)h=Math.min(20,h+Math.floor(adj*1.5));if(j===5)h=Math.min(21,h+Math.floor(adj*2));return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0')}))}
+for(let m=7;m<=12;m++){D[m]=D[6].map((day,i)=>day.map((t,j)=>{let h=parseInt(t.split(':')[0]),mn=parseInt(t.split(':')[1]);let adj=(m-6)*0.4;if(j===0)h=Math.min(6,h+Math.floor(adj));if(j===1)h=Math.min(7,h+Math.floor(adj*0.8));if(j===3)h=Math.max(15,h-Math.floor(adj*0.5));if(j===4)h=Math.max(17,h-Math.floor(adj));if(j===5)h=Math.max(18,h-Math.floor(adj*1.2));return String(h).padStart(2,'0')+':'+String(mn).padStart(2,'0')}))}
 
-let adhIdx=0;
-function toMin(h,m){return h*60+m}
-function getNext(){
-  const n=new Date(),now=toMin(n.getHours(),n.getMinutes());
-  for(let i=0;i<PRAYERS.length;i++) if(toMin(PRAYERS[i].h,PRAYERS[i].m)>now) return i;
-  return 0;
+var PR=[{ar:'الفجر',en:'FAJR',ic:'🌙',idx:0},{ar:'الشروق',en:'SUNRISE',ic:'🌅',idx:1},{ar:'الظهر',en:'DHUHR',ic:'☀️',idx:2},{ar:'العصر',en:'ASR',ic:'🌤️',idx:3},{ar:'المغرب',en:'MAGHRIB',ic:'🌆',idx:4},{ar:'العشاء',en:'ISHA',ic:'🌃',idx:5}];
+var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+var EN_DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var AR_MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+var AD=[['اللهم أعنا على ذكرك وشكرك وحسن عبادتك','O Allah, help us to remember You, thank You, and worship You in the best way'],['سبحان الله وبحمده، سبحان الله العظيم','Glory be to Allah and praise be to Him'],['ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار','Our Lord, give us good in this world and the Hereafter'],['اللهم اجعل هذا اليوم خيرًا وبركة','O Allah, make this day full of goodness and blessings']];
+var az=0;
+
+function pad(n){return String(n).padStart(2,'0')}
+function toMin(t){var p=t.split(':');return +p[0]*60 + +p[1]}
+function fmt(t){var p=t.split(':'),h=parseInt(p[0],10),m=p[1],ap=h>=12?'م':'ص';h=h%12;if(h===0)h=12;return pad(h)+':'+m+' '+ap}
+function todayTimes(){var n=new Date();return D[n.getMonth()+1][n.getDate()-1]}
+function nextPrayer(ts){var now=new Date(),cur=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();for(var i=0;i<PR.length;i++){var p=PR[i],tm=toMin(ts[p.idx])*60;if(tm>cur)return {p:p,remain:tm-cur,target:tm/60};}var f=PR[0],t=toMin(ts[f.idx])*60;return {p:f,remain:24*3600-cur+t,target:toMin(ts[f.idx])+1440}}
+function hijri(){return new Intl.DateTimeFormat('ar-SA-u-ca-islamic',{day:'numeric',month:'long',year:'numeric'}).format(new Date())}
+
+function getArabicDate(){
+  var n=new Date();
+  var day=n.getDate();
+  var month=AR_MONTHS[n.getMonth()];
+  var year=n.getFullYear();
+  return day+' '+month+' '+year;
 }
 
-// ─── STARS ───
-const canvas=document.getElementById('stars');
-const ctx=canvas.getContext('2d');
-let W,H,pts=[];
-function resizeCanvas(){
-  W=canvas.width=window.innerWidth;
-  H=canvas.height=window.innerHeight;
-}
-function mkPt(){
-  const gold=Math.random()<0.2;
-  return{
-    x:Math.random()*W, y:Math.random()*H,
-    vx:(Math.random()-0.5)*0.2, vy:(Math.random()-0.5)*0.2,
-    r:Math.random()*(gold?1.6:0.9)+0.3,
-    a:Math.random(), da:0.003+Math.random()*0.004,
-    gold
-  };
-}
-function drawStars(){
-  ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#080d1a'; ctx.fillRect(0,0,W,H);
-
-  // dynamic gradient based on hour
-  const hr=new Date().getHours();
-  let gCol='transparent';
-  if(hr>=4&&hr<6) gCol='rgba(160,80,30,0.12)';
-  else if(hr>=18&&hr<20) gCol='rgba(140,60,20,0.1)';
-  else if(hr>=20||hr<4) gCol='rgba(20,10,60,0.04)';
-  if(gCol!=='transparent'){
-    const g=ctx.createRadialGradient(W*.5,0,0,W*.5,H,H*0.8);
-    g.addColorStop(0,gCol); g.addColorStop(1,'transparent');
-    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-  }
-
-  pts.forEach(p=>{
-    p.x+=p.vx; p.y+=p.vy; p.a+=p.da;
-    if(p.a>1||p.a<0) p.da*=-1;
-    if(p.x<0)p.x=W; if(p.x>W)p.x=0;
-    if(p.y<0)p.y=H; if(p.y>H)p.y=0;
-    const al=0.15+p.a*0.75;
-    ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    ctx.fillStyle=p.gold?`rgba(201,168,76,${al})`:`rgba(200,210,240,${al*0.7})`;
-    ctx.fill();
-    if(p.gold&&p.a>0.65){
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r*3,0,Math.PI*2);
-      ctx.fillStyle=`rgba(201,168,76,${al*0.1})`; ctx.fill();
-    }
+function render(){
+  var n=new Date(),h=n.getHours(),mn=n.getMinutes(),sec=n.getSeconds(),h12=h%12||12;
+  document.getElementById('CLOCK').textContent=pad(h12)+':'+pad(mn);
+  document.getElementById('AMPM').textContent=h>=12?'م':'ص';
+  document.getElementById('DAYNAME').textContent=DAYS[n.getDay()];
+  document.getElementById('DAYNAMEEN').textContent=EN_DAYS[n.getDay()];
+  document.getElementById('GREG').textContent=getArabicDate();
+  document.getElementById('HIJRI').textContent=hijri();
+  document.getElementById('UPDATED').textContent=pad(h)+':'+pad(mn);
+  
+  var ts=todayTimes(),nx=nextPrayer(ts);
+  document.getElementById('NEXTNAME').textContent=nx.p.ar;
+  document.getElementById('NEXTTIME').textContent='حتى '+fmt(ts[nx.p.idx]);
+  document.getElementById('COUNTDOWN').textContent=pad(Math.floor(nx.remain/3600))+':'+pad(Math.floor(nx.remain%3600/60))+':'+pad(nx.remain%60);
+  
+  var all=PR.map(x=>toMin(ts[x.idx]));
+  var nowMin=h*60+mn+sec/60;
+  var nextM=nx.target;
+  var prevM=all[all.length-1]-1440;
+  for(var i=0;i<all.length;i++){if(all[i]<nextM&&all[i]<=nowMin)prevM=all[i]}
+  var total=(nextM-prevM)*60,since=(nowMin-prevM)*60;
+  document.getElementById('PROGRESS').style.width=Math.max(0,Math.min(100,(since/total)*100))+'%';
+  
+  var html='';
+  PR.forEach(function(p){
+    if(p.idx===1)return;
+    var tm=toMin(ts[p.idx]);
+    var isActive=p.idx===nx.p.idx;
+    var isPast=tm<h*60+mn;
+    var cls=isActive?' active':(isPast?' past':'');
+    html+='<div class="prayer-item'+cls+'">'+(isActive?'<div class="active-badge">القادمة</div>':'')+'<div class="prayer-icon">'+p.ic+'</div><div class="prayer-info"><div class="prayer-name-ar">'+p.ar+'</div><div class="prayer-name-en">'+p.en+'</div></div><div class="prayer-time">'+fmt(ts[p.idx])+'</div></div>';
   });
-  // connections
-  for(let i=0;i<pts.length;i+=2){
-    for(let j=i+1;j<pts.length;j+=2){
-      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
-      const d=Math.sqrt(dx*dx+dy*dy);
-      if(d<70){
-        ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y);
-        ctx.strokeStyle=`rgba(201,168,76,${0.05*(1-d/70)})`; ctx.lineWidth=0.5; ctx.stroke();
-      }
-    }
-  }
-  requestAnimationFrame(drawStars);
+  document.getElementById('PRAYERLIST').innerHTML=html;
+  document.getElementById('SUNRISE').textContent=fmt(ts[1]);
+  document.getElementById('SUNSET').textContent=fmt(ts[4]);
 }
 
-// ─── CLOCK & DATE ───
-function updateClock(){
-  const n=new Date();
-  let h=n.getHours(); const m=n.getMinutes(), ap=h>=12?'PM':'AM'; h=h%12||12;
-  document.getElementById('clock').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-  document.getElementById('ampm').textContent=ap;
-  document.getElementById('day-ar').textContent=DAYS_AR[n.getDay()];
-  document.getElementById('day-en').textContent=DAYS_EN[n.getDay()];
-  document.getElementById('greg').textContent=n.getDate()+' '+MONTHS[n.getMonth()]+' '+n.getFullYear();
+function updateAzkar(){
+  var a=AD[az%AD.length];
+  document.getElementById('AZKAR').textContent=a[0];
+  document.getElementById('AZKARTRANS').textContent=a[1];
+  az++;
 }
 
-// ─── PRAYERS ───
-function updatePrayers(){
-  const ni=getNext(), n=new Date(), now=toMin(n.getHours(),n.getMinutes());
-  PRAYERS.forEach((p,i)=>{
-    const row=document.getElementById('p-'+p.id);
-    const te=document.getElementById('t-'+p.id);
-    const nb=document.getElementById('nb-'+p.id);
-    const pm=toMin(p.h,p.m), passed=pm<now&&i!==ni, active=i===ni;
-    row.className='p-row'+(active?' active':passed?' passed':'');
-    te.className='p-time'+(active?' active-t':'');
-    nb.style.display=active?'block':'none';
-  });
-  const np=PRAYERS[ni];
-  document.getElementById('np-ar').textContent=np.ar;
-  document.getElementById('np-en').textContent=np.en;
-}
+render();
+updateAzkar();
+setInterval(render,1000);
+setInterval(updateAzkar,15000);
 
-// ─── COUNTDOWN ───
-function updateCountdown(){
-  const ni=getNext(), np=PRAYERS[ni], n=new Date();
-  const now=toMin(n.getHours(),n.getMinutes());
-  let diff=toMin(np.h,np.m)-now; if(diff<0)diff+=24*60;
-  const ds=diff*60-n.getSeconds();
-  const h=Math.floor(ds/3600), m=Math.floor((ds%3600)/60), s=ds%60;
-  document.getElementById('countdown').textContent=
-    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
-  const pi=ni===0?PRAYERS.length-1:ni-1;
-  let win=toMin(np.h,np.m)-toMin(PRAYERS[pi].h,PRAYERS[pi].m); if(win<0)win+=24*60;
-  const pct=Math.min(100,Math.max(0,Math.round((win-diff)/win*100)));
-  document.getElementById('pbar').style.width=pct+'%';
-}
-
-// ─── ADHKAR ROTATION ───
-function nextAdhkar(){
-  adhIdx=(adhIdx+1)%ADHKAR.length;
-  const el=document.getElementById('adhkar');
-  el.style.opacity='0';
-  setTimeout(()=>{el.textContent=ADHKAR[adhIdx];el.style.opacity='1';},400);
-}
-document.getElementById('adhkar').style.transition='opacity 0.4s ease';
-
-// ─── INIT ───
-resizeCanvas();
-pts=Array.from({length:130},mkPt);
-drawStars();
-updateClock(); updatePrayers(); updateCountdown();
-setInterval(()=>{updateClock();updatePrayers();updateCountdown();},1000);
-setInterval(nextAdhkar,10000);
-window.addEventListener('resize',resizeCanvas);
-
-// Prevent double-tap zoom on iOS
-let lastTap=0;
-document.addEventListener('touchend',e=>{
-  const now=Date.now();
-  if(now-lastTap<300) e.preventDefault();
-  lastTap=now;
-},{passive:false});
+document.addEventListener('dblclick',function(e){e.preventDefault()},false);
 </script>
 </body>
 </html>
